@@ -1,32 +1,41 @@
 import { useEffect, useState } from 'react'
 import { fetchLiveFlights } from './api/flightApi'
+import GlobeWidget from './components/GlobeWidget'
 
 function App() {
-  // useState is React's "Memory". We are creating a variable called 'flights'
   const [flights, setFlights] = useState([]);
 
-  // useEffect tells React: "Run this block of code exactly ONCE when the page first loads"
   useEffect(() => {
-    
-    // Create an async function to call our API
     const getFlights = async () => {
       const liveData = await fetchLiveFlights();
-      setFlights(liveData); // Save the data into React's memory
-      console.log("SUCCESS! Here is the data from Spring Boot:", liveData);
+      setFlights(liveData);
     };
-
-    // Execute the function
     getFlights();
-
-  }, []); // The empty brackets [] mean "only run once"
+  }, []);
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>🌍 Live Flight Tracker</h1>
-      <p>Number of flights currently tracked: {flights.length}</p>
-      <p style={{ color: 'gray' }}>
-        (Open your browser's Developer Tools Console to see the actual JSON data!)
-      </p>
+    // This wrapper ensures the globe takes up the whole screen
+    <div style={{ width: '100vw', height: '100vh', margin: 0, padding: 0, overflow: 'hidden' }}>
+      
+      {/* Floating UI HUD (Heads Up Display) */}
+      <div style={{ 
+        position: 'absolute', 
+        top: '20px', 
+        left: '20px', 
+        zIndex: 10, // Keeps the text ON TOP of the 3D globe
+        background: 'rgba(11, 15, 26, 0.8)', 
+        padding: '15px 25px', 
+        borderRadius: '12px',
+        border: '1px solid rgba(255,255,255,0.1)'
+      }}>
+        <h1 style={{ margin: '0 0 10px 0', fontSize: '24px' }}>🌍 Aviation Intelligence</h1>
+        <p style={{ margin: 0, color: '#aaa' }}>
+          Active Flights Tracking: <span style={{ color: '#ffcc00', fontWeight: 'bold' }}>{flights.length}</span>
+        </p>
+      </div>
+
+      {/* Render the 3D Globe and pass the data into it */}
+      <GlobeWidget flights={flights} />
     </div>
   )
 }
