@@ -16,27 +16,25 @@ export const fetchLiveFlights = async () => {
     }
 };
 
-// NEW: Fetches the route details for a specific clicked plane
+// NEW: Fetches the combined Radar, Schedule, and Photo details for a specific clicked plane
 export const fetchFlightRoute = async (callsign) => {
     try {
-        console.log(`Asking Spring Boot for route details for: ${callsign}`);
+        console.log(`Asking Spring Boot for deep-dive details for: ${callsign}`);
         
-        // This hits your second Spring Boot endpoint!
-        const response = await fetch(`http://localhost:8080/api/flights/route/${callsign}`);
+        // FIX: Removed "/route/" from the URL to match the new Spring Boot endpoint!
+        const response = await fetch(`http://localhost:8080/api/flights/${callsign}`);
         
         if (!response.ok) {
             throw new Error("Network response was not ok");
         }
         
-        // Spring Boot returns nothing (null) if Aviationstack doesn't have the flight.
-        // We handle that safely here so React doesn't crash.
         const text = await response.text();
         const data = text ? JSON.parse(text) : null;
         
         return data;
 
     } catch (error) {
-        console.error(`Failed to fetch route for ${callsign}.`, error);
+        console.error(`Failed to fetch details for ${callsign}.`, error);
         return null; 
     }
 };
