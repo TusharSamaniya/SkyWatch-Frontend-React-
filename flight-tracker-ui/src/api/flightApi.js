@@ -1,7 +1,7 @@
 export const fetchLiveFlights = async () => {
     try {
         console.log("Fetching data from Spring Boot...");
-        const response = await fetch('http://localhost:8080/api/flights/live');
+        const response = await fetch('https://skywatch-backend-springboot.onrender.com/api/flights/live');
         
         if (!response.ok) {
             throw new Error("Network response was not ok");
@@ -22,7 +22,7 @@ export const fetchFlightRoute = async (callsign) => {
         console.log(`Asking Spring Boot for deep-dive details for: ${callsign}`);
         
         // FIX: Removed "/route/" from the URL to match the new Spring Boot endpoint!
-        const response = await fetch(`http://localhost:8080/api/flights/${callsign}`);
+        const response = await fetch(`https://skywatch-backend-springboot.onrender.com/api/flights/${callsign}`);
         
         if (!response.ok) {
             throw new Error("Network response was not ok");
