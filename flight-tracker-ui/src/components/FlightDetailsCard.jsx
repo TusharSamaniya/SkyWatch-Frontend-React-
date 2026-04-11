@@ -33,7 +33,7 @@ const FlightDetailsCard = ({ flightData, onClose }) => {
 
   return (
     <div style={{
-      position: 'fixed', top: '65px', right: 0, width: '380px', height: 'calc(100vh - 65px)',
+      position: 'fixed', top: '0', right: 0, width: '380px', height: '100vh',
       background: '#111827', borderLeft: '1px solid #374151', padding: '20px', 
       color: 'white', zIndex: 50, overflowY: 'auto', boxShadow: '-10px 0 30px rgba(0,0,0,0.5)'
     }}>

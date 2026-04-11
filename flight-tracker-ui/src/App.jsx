@@ -1,45 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import GlobeWidget from './components/GlobeWidget';
 import FlightDetailsCard from './components/FlightDetailsCard';
-import Navbar from './components/Navbar';
 import { fetchLiveFlights, fetchFlightRoute } from './api/flightApi';
 
 function App() {
-  // State to hold the massive array of all planes in India
   const [flights, setFlights] = useState([]);
-  
-  // State to hold the specific radar & schedule data when a single plane is clicked
   const [selectedFlightData, setSelectedFlightData] = useState(null); 
 
-  // Fetch all live flights on initial load, and update every 60 seconds
   useEffect(() => {
     const getFlights = async () => {
       try {
         const data = await fetchLiveFlights();
-        if (data) {
-          setFlights(data);
-        }
+        if (data) setFlights(data);
       } catch (error) {
         console.error("Failed to load flights:", error);
       }
     };
     
-    getFlights(); // Initial fetch
-    
-    const intervalId = setInterval(getFlights, 60000); // 60-second timer
-    return () => clearInterval(intervalId); // Cleanup on unmount
+    getFlights(); 
+    const intervalId = setInterval(getFlights, 60000); 
+    return () => clearInterval(intervalId); 
   }, []);
 
-  // Triggered exactly when a user clicks a yellow airplane icon on the globe
   const handleFlightClick = async (point) => {
     try {
-      console.log(`Fetching deep-dive data for ${point.callsign}...`);
-      
-      // Hit our new Spring Boot /api/flights/{callsign} endpoint
       const combinedData = await fetchFlightRoute(point.callsign);
-      
-      // Save the returned JSON (which contains .radar and .schedule) into state.
-      // This automatically makes the FlightDetailsCard slide into view!
       setSelectedFlightData(combinedData); 
     } catch (error) {
       console.error("Error fetching specific flight details:", error);
@@ -47,20 +32,33 @@ function App() {
   };
 
   return (
-    // Main App Shell: Locks the screen size, prevents scrolling, sets dark theme
+    // Main App Shell
     <div style={{ width: '100vw', height: '100vh', backgroundColor: '#0b0f1a', overflow: 'hidden', position: 'relative' }}>
       
-      {/* 1. The Top Navigation Bar (Fixed at the top) */}
-      <Navbar />
+      {/* NEW: Floating SkyWatch Logo */}
+      <div style={{
+        position: 'absolute',
+        top: '25px',
+        left: '30px',
+        zIndex: 100, 
+        display: 'flex',
+        flexDirection: 'column',
+        pointerEvents: 'none' // Ensures you can still click planes that fly behind the text
+      }}>
+        <span style={{ fontSize: '24px', fontWeight: '900', color: '#ffba00', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+          SkyWatch
+        </span>
+        <span style={{ fontSize: '11px', color: '#9ca3af', letterSpacing: '1.5px', textShadow: '0 1px 5px rgba(0,0,0,0.8)' }}>
+          LIVE INDIA AIRSPACE ANALYTICS
+        </span>
+      </div>
 
-      {/* 2. The Main Stage / Globe Area 
-          Padding-top is 65px so it sits perfectly underneath the Navbar */}
-      <div style={{ paddingTop: '65px', width: '100%', height: '100%' }}>
+      {/* 1. The Main Stage / Globe Area (Full Screen) */}
+      <div style={{ width: '100%', height: '100%' }}>
         <GlobeWidget flights={flights} onFlightClick={handleFlightClick} />
       </div>
 
-      {/* 3. The Sliding Information Panel 
-          This only renders if 'selectedFlightData' is NOT null */}
+      {/* 2. The Sliding Information Panel */}
       {selectedFlightData && (
         <FlightDetailsCard 
           flightData={selectedFlightData} 
