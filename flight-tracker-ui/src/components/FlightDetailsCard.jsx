@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import FlightStoryOverlay from './FlightStoryOverlay'; // <-- NEW IMPORT
 
 const FlightDetailsCard = ({ flightData, onClose }) => {
   const [timeLeft, setTimeLeft] = useState('Calculating...');
+  const [showOverlay, setShowOverlay] = useState(false); // <-- NEW STATE FOR AI OVERLAY
 
   // This effect calculates the live countdown to landing
   useEffect(() => {
@@ -44,7 +46,7 @@ const FlightDetailsCard = ({ flightData, onClose }) => {
       borderLeft: '1px solid #374151', 
       padding: '20px', 
       color: 'white', 
-      zIndex: 1000, // <--- CHANGE THIS FROM 50 TO 1000
+      zIndex: 1000, 
       overflowY: 'auto', 
       boxShadow: '-10px 0 30px rgba(0,0,0,0.5)'
     }}>
@@ -99,7 +101,7 @@ const FlightDetailsCard = ({ flightData, onClose }) => {
         </div>
       )}
 
-      {/* Radar Stats... (Same as before) */}
+      {/* Radar Stats */}
       <div style={{ background: '#1f2937', padding: '20px', borderRadius: '10px' }}>
         <h3 style={{ margin: '0 0 15px 0', fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase' }}>Live Radar Telemetry</h3>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
@@ -109,6 +111,39 @@ const FlightDetailsCard = ({ flightData, onClose }) => {
           <div><div style={{ fontSize: '12px', color: '#9ca3af' }}>Coordinates</div><div style={{ fontSize: '14px', fontWeight: 'bold' }}>{radar.latitude.toFixed(2)}, {radar.longitude.toFixed(2)}</div></div>
         </div>
       </div>
+
+      {/* NEW: The Deep Dive Trigger Button */}
+      <button 
+        onClick={() => setShowOverlay(true)}
+        style={{
+          width: '100%',
+          marginTop: '20px',
+          padding: '15px',
+          background: 'transparent',
+          color: '#ffba00',
+          border: '2px solid #ffba00',
+          borderRadius: '8px',
+          fontSize: '14px',
+          fontWeight: 'bold',
+          textTransform: 'uppercase',
+          letterSpacing: '1px',
+          cursor: 'pointer',
+          transition: 'all 0.3s'
+        }}
+        onMouseOver={(e) => { e.target.style.background = '#ffba00'; e.target.style.color = '#000'; }}
+        onMouseOut={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#ffba00'; }}
+      >
+        Know More About This Flight
+      </button>
+
+      {/* NEW: Render the Full-Screen Overlay if the user clicked the button */}
+      {showOverlay && (
+        <FlightStoryOverlay 
+          flightData={flightData} 
+          onClose={() => setShowOverlay(false)} 
+        />
+      )}
+
     </div>
   );
 };
