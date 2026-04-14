@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import GlobeWidget from './components/GlobeWidget';
 import FlightDetailsCard from './components/FlightDetailsCard';
-import RegionSelector from './components/RegionSelector'; // NEW IMPORT
-import { fetchLiveFlights, fetchFlightRoute } from './api/flightApi';
+import AirportDetailsCard from './components/AirportDetailsCard'; // NEW IMPORT
+import RegionSelector from './components/RegionSelector';
+import { fetchLiveFlights, fetchFlightRoute, fetchAirports } from './api/flightApi'; // NEW IMPORT
 
 // Camera Coordinates for the cinematic spin
 const cameraPositions = {
@@ -16,40 +17,61 @@ const cameraPositions = {
 
 function App() {
   const [flights, setFlights] = useState([]);
+  const [airports, setAirports] = useState([]); // NEW STATE
+  
   const [selectedFlightData, setSelectedFlightData] = useState(null); 
-  const globeRef = useRef(); // We need this to control the camera!
+  const [selectedAirportData, setSelectedAirportData] = useState(null); // NEW STATE
+  const globeRef = useRef();
 
   // Default load (India)
   useEffect(() => {
-    const loadInitialFlights = async () => {
-      const data = await fetchLiveFlights('India', '');
-      if (data) setFlights(data);
+    const loadInitialData = async () => {
+      // Load both flights and airports simultaneously
+      const [flightData, airportData] = await Promise.all([
+        fetchLiveFlights('India', ''),
+        fetchAirports('India')
+      ]);
+
+      if (flightData) setFlights(flightData);
+      if (airportData) setAirports(airportData);
     };
-    loadInitialFlights();
+    loadInitialData();
   }, []);
 
-  // NEW: Handle Region Change & Spin Camera
+  // Handle Region Change & Spin Camera
   const handleRegionSubmit = async (country, state) => {
-    // 1. Spin the camera smoothly over 2 seconds (2000ms)
     if (globeRef.current && cameraPositions[country]) {
       globeRef.current.pointOfView(cameraPositions[country], 2000);
     }
 
-    // 2. Clear old flights so the user knows it's loading
+    // Clear old data so the user knows it's loading
     setFlights([]); 
+    setAirports([]); 
 
-    // 3. Fetch the new flights
-    const data = await fetchLiveFlights(country, state);
-    if (data) setFlights(data);
+    // Fetch the new data
+    const [flightData, airportData] = await Promise.all([
+      fetchLiveFlights(country, state),
+      fetchAirports(country)
+    ]);
+
+    if (flightData) setFlights(flightData);
+    if (airportData) setAirports(airportData);
   };
 
   const handleFlightClick = async (point) => {
+    setSelectedAirportData(null); // Hide the airport card if it's open
     try {
       const combinedData = await fetchFlightRoute(point.callsign);
       setSelectedFlightData(combinedData); 
     } catch (error) {
       console.error("Error fetching specific flight details:", error);
     }
+  };
+
+  // NEW: Handle Airport Click
+  const handleAirportClick = (airport) => {
+    setSelectedFlightData(null); // Hide the flight card if it's open
+    setSelectedAirportData(airport);
   };
 
   return (
@@ -61,21 +83,27 @@ function App() {
         <span style={{ fontSize: '11px', color: '#9ca3af', letterSpacing: '1.5px', textShadow: '0 1px 5px rgba(0,0,0,0.8)' }}>LIVE AIRSPACE ANALYTICS</span>
       </div>
 
-      {/* NEW: The Geographic Filter UI */}
       <RegionSelector onShowFlights={handleRegionSubmit} />
 
-      {/* Main Globe Area */}
       <div style={{ width: '100%', height: '100%' }}>
         <GlobeWidget 
-          ref={globeRef} // Pass the ref to the globe
+          ref={globeRef} 
           flights={flights} 
           onFlightClick={handleFlightClick} 
+          
+          // NEW PROPS PASSED TO GLOBE
+          airports={airports} 
+          onAirportClick={handleAirportClick} 
         />
       </div>
 
-      {/* Sliding Information Panel */}
+      {/* Sliding Information Panels */}
       {selectedFlightData && (
         <FlightDetailsCard flightData={selectedFlightData} onClose={() => setSelectedFlightData(null)} />
+      )}
+
+      {selectedAirportData && (
+        <AirportDetailsCard airport={selectedAirportData} onClose={() => setSelectedAirportData(null)} />
       )}
 
     </div>
