@@ -68,3 +68,25 @@ export const fetchFlightRoute = async (callsign) => {
         return null; 
     }
 };
+
+// NEW: Fetch the AI-generated story for the flight
+export const fetchFlightStory = async (callsign, dep, arr, aircraft, alt) => {
+    try {
+        console.log(`Asking Spring Boot to generate AI story for: ${callsign}`);
+        
+        // Ensure this points to your local Spring Boot server!
+        const url = `http://localhost:8080/api/flights/${callsign}/story?dep=${dep}&arr=${arr}&aircraft=${aircraft}&alt=${alt}`;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        
+        const data = await response.json();
+        return data.story; 
+
+    } catch (error) {
+        console.error(`Failed to fetch AI story for ${callsign}.`, error);
+        return "Flight details are currently being processed by air traffic control. Please check back later."; 
+    }
+};
