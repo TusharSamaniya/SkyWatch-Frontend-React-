@@ -90,3 +90,35 @@ export const fetchFlightStory = async (callsign, dep, arr, aircraft, alt) => {
         return "Flight details are currently being processed by air traffic control. Please check back later."; 
     }
 };
+
+// NEW: Fetch all airports for the map
+export const fetchAirports = async (country = 'IN') => {
+    try {
+        console.log(`Asking Spring Boot for airports in: ${country}`);
+        const response = await fetch(`http://localhost:8080/api/flights/airports?country=${country}`);
+        
+        if (!response.ok) throw new Error("Failed to fetch airports");
+        
+        const data = await response.json();
+        return data; 
+    } catch (error) {
+        console.error("Error fetching airports:", error);
+        return [];
+    }
+};
+
+// NEW: Fetch live schedule for a specific airport
+export const fetchAirportSchedule = async (iata) => {
+    try {
+        console.log(`Asking Spring Boot for live schedule at: ${iata}`);
+        const response = await fetch(`http://localhost:8080/api/flights/airports/${iata}/schedules`);
+        
+        if (!response.ok) throw new Error("Failed to fetch airport schedule");
+        
+        const data = await response.json();
+        return data; 
+    } catch (error) {
+        console.error(`Error fetching schedule for ${iata}:`, error);
+        return { arrivals: [], departures: [] };
+    }
+};
