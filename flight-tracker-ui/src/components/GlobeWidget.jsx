@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState, forwardRef } from 'react'; // NEW: Imported forwardRef
 import Globe from 'react-globe.gl';
 
-const GlobeWidget = ({ flights, onFlightClick }) => {
-  const globeEl = useRef();
+// NEW: Wrapped the entire component in forwardRef
+const GlobeWidget = forwardRef(({ flights, onFlightClick }, ref) => {
   const [countries, setCountries] = useState({ features: [] });
 
   useEffect(() => {
@@ -10,14 +10,15 @@ const GlobeWidget = ({ flights, onFlightClick }) => {
       .then(res => res.json())
       .then(setCountries);
 
-    if (globeEl.current) {
-      globeEl.current.pointOfView({ lat: 28.6, lng: 77.2, altitude: 0.8 }, 4000);
+    // Initial spin when the app first loads (using the passed-in ref)
+    if (ref && ref.current) {
+      ref.current.pointOfView({ lat: 28.6, lng: 77.2, altitude: 0.8 }, 4000);
     }
-  }, []);
+  }, [ref]);
 
   return (
     <Globe
-      ref={globeEl}
+      ref={ref} // NEW: The wire from App.jsx is now connected directly to the 3D globe!
       backgroundColor="#0b0f1a"
       globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
       polygonsData={countries.features}
@@ -32,14 +33,9 @@ const GlobeWidget = ({ flights, onFlightClick }) => {
       pointsData={flights}
       pointLat={(d) => d.latitude}
       pointLng={(d) => d.longitude}
-      
-      // FIX: Divided by 300,000 to fix the giant spikes and make them hover beautifully!
       pointAltitude={(d) => d.altitude ? d.altitude / 300000 : 0.02} 
-      
-      // Make the dot almost completely transparent, but keep the hit-box large
       pointColor={() => 'rgba(255, 204, 0, 0.01)'} 
       pointRadius={0.4} 
-      
       onPointClick={(point) => onFlightClick(point)} 
       pointLabel={(d) => `
         <div style="background: rgba(0,0,0,0.8); padding: 8px; border-radius: 5px; color: white; border: 1px solid #ffcc00;">
@@ -58,24 +54,17 @@ const GlobeWidget = ({ flights, onFlightClick }) => {
       htmlAltitude={(d) => d.altitude ? d.altitude / 300000 : 0.02}
       htmlElement={(d) => {
         const el = document.createElement('div');
-        
-        // We subtract 45 degrees because the raw SVG image points top-right natively
         const rotation = d.trueTrack ? d.trueTrack - 45 : 0;
-        
-        // Inject a crisp, yellow SVG airplane
         el.innerHTML = `
           <svg viewBox="0 0 24 24" width="20" height="20" style="fill: #ffcc00; transform: rotate(${rotation}deg); filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8));">
             <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
           </svg>
         `;
-        
-        // Crucial: Tell the browser to ignore clicks on the HTML image, 
-        // allowing the mouse to "click through" to the invisible WebGL dot underneath!
         el.style.pointerEvents = 'none'; 
         return el;
       }}
     />
   );
-};
+});
 
 export default GlobeWidget;

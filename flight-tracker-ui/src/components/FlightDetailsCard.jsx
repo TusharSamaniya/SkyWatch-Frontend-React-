@@ -36,15 +36,15 @@ const FlightDetailsCard = ({ flightData, onClose }) => {
       position: 'fixed', 
       top: 0, 
       right: 0, 
-      width: '100%',            // NEW: Take up the full screen on mobile
-      maxWidth: '400px',        // NEW: Stop expanding at 400px so it looks like a sidebar on desktop
-      boxSizing: 'border-box',  // NEW: Forces padding to stay INSIDE the width boundaries
+      width: '100%',            
+      maxWidth: '400px',        
+      boxSizing: 'border-box',  
       height: '100vh', 
       background: '#111827', 
       borderLeft: '1px solid #374151', 
       padding: '20px', 
       color: 'white', 
-      zIndex: 50, 
+      zIndex: 1000, // <--- CHANGE THIS FROM 50 TO 1000
       overflowY: 'auto', 
       boxShadow: '-10px 0 30px rgba(0,0,0,0.5)'
     }}>
