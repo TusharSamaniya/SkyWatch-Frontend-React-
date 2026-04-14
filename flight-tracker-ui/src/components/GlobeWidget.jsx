@@ -1,8 +1,8 @@
-import React, { useEffect, useState, forwardRef } from 'react'; // NEW: Imported forwardRef
+import React, { useEffect, useState, forwardRef } from 'react';
 import Globe from 'react-globe.gl';
 
-// NEW: Wrapped the entire component in forwardRef
-const GlobeWidget = forwardRef(({ flights, onFlightClick }, ref) => {
+// NEW: Added 'airports' and 'onAirportClick' to the props
+const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportClick }, ref) => {
   const [countries, setCountries] = useState({ features: [] });
 
   useEffect(() => {
@@ -10,7 +10,7 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick }, ref) => {
       .then(res => res.json())
       .then(setCountries);
 
-    // Initial spin when the app first loads (using the passed-in ref)
+    // Initial spin when the app first loads
     if (ref && ref.current) {
       ref.current.pointOfView({ lat: 28.6, lng: 77.2, altitude: 0.8 }, 4000);
     }
@@ -18,7 +18,7 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick }, ref) => {
 
   return (
     <Globe
-      ref={ref} // NEW: The wire from App.jsx is now connected directly to the 3D globe!
+      ref={ref} 
       backgroundColor="#0b0f1a"
       globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
       polygonsData={countries.features}
@@ -28,7 +28,7 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick }, ref) => {
       polygonStrokeColor={() => '#ffffff'}
 
       // ==========================================
-      // LAYER 1: INVISIBLE HIT-BOXES (For Clicks & Tooltips)
+      // LAYER 1: INVISIBLE HIT-BOXES (For Flights)
       // ==========================================
       pointsData={flights}
       pointLat={(d) => d.latitude}
@@ -63,6 +63,25 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick }, ref) => {
         el.style.pointerEvents = 'none'; 
         return el;
       }}
+
+      // ==========================================
+      // LAYER 3: NEW AIRPORT LAYER (Green Dots + IATA Text)
+      // ==========================================
+      labelsData={airports}
+      labelLat={(d) => d.lat}
+      labelLng={(d) => d.lng}
+      labelText={(d) => d.iata} // Shows the airport code (e.g., DEL, BOM)
+      labelSize={0.6} // Size of the text
+      labelDotRadius={0.3} // Size of the green dot
+      labelColor={() => '#10b981'} // Bright Emerald Green
+      labelAltitude={0.015} // Sits slightly above the map
+      onLabelClick={(airport) => onAirportClick(airport)} // Triggers the panel!
+      labelLabel={(d) => `
+        <div style="background: rgba(0,0,0,0.8); padding: 8px; border-radius: 5px; color: white; border: 1px solid #10b981;">
+          <b>${d.iata} - ${d.name}</b><br/>
+          Click to view live timetable
+        </div>
+      `}
     />
   );
 });
