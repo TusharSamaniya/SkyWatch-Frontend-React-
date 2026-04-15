@@ -59,11 +59,11 @@ const LeftPanel = ({ activeTool, onClose, airports, flights = [], onDrawArc, onA
     .filter(a => a.name.toLowerCase().includes(airlineSearch.toLowerCase()) || a.iata.toLowerCase().includes(airlineSearch.toLowerCase()))
     .slice(0, 50);
 
-  // NEW: Delay Board Logic! Filter flights delayed more than 15 mins, and sort them highest to lowest.
+  // FIX: Changed from > 15 to > 0 so we can see ANY delay for testing!
   const delayedFlightsList = flights
-    .filter(f => f.delayed && f.delayed > 15)
+    .filter(f => f.delayed && f.delayed > 0)
     .sort((a, b) => b.delayed - a.delayed)
-    .slice(0, 50); // Show top 50 worst delays
+    .slice(0, 50); 
 
   return (
     <div style={{
@@ -78,9 +78,6 @@ const LeftPanel = ({ activeTool, onClose, airports, flights = [], onDrawArc, onA
         <button onClick={onClose} style={{ background: '#1f2937', border: 'none', color: 'white', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer' }}>✖</button>
       </div>
 
-      {/* ========================================= */}
-      {/* TOOL 1: ROUTE INTELLIGENCE */}
-      {/* ========================================= */}
       {activeTool === 'route' && (
         <div style={{ marginTop: '20px' }}>
           <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
@@ -119,9 +116,6 @@ const LeftPanel = ({ activeTool, onClose, airports, flights = [], onDrawArc, onA
         </div>
       )}
 
-      {/* ========================================= */}
-      {/* TOOL 2: AIRLINE FLEET TRACKER */}
-      {/* ========================================= */}
       {activeTool === 'airline' && (
         <div style={{ marginTop: '20px' }}>
           <p style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '15px' }}>
@@ -150,9 +144,6 @@ const LeftPanel = ({ activeTool, onClose, airports, flights = [], onDrawArc, onA
         </div>
       )}
 
-      {/* ========================================= */}
-      {/* TOOL 3: LIVE DELAY BOARD */}
-      {/* ========================================= */}
       {activeTool === 'delays' && (
         <div style={{ marginTop: '20px' }}>
           <p style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '15px' }}>

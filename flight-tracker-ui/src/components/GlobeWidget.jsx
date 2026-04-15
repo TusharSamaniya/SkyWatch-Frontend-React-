@@ -1,7 +1,6 @@
 import React, { useEffect, useState, forwardRef } from 'react';
 import Globe from 'react-globe.gl';
 
-// NEW: Added 'activeTool' to the props
 const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportClick, activeArc, activeTool }, ref) => {
   const [countries, setCountries] = useState({ features: [] });
 
@@ -26,7 +25,6 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportCli
       polygonSideColor={() => 'rgba(0,0,0,0)'}
       polygonStrokeColor={() => '#ffffff'}
 
-      // LAYER 1: FLIGHT HITBOXES
       pointsData={flights}
       pointLat={(d) => d.latitude}
       pointLng={(d) => d.longitude}
@@ -43,7 +41,6 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportCli
         </div>
       `}
 
-      // LAYER 2: AIRPLANE ICONS
       htmlElementsData={flights}
       htmlLat={(d) => d.latitude}
       htmlLng={(d) => d.longitude}
@@ -52,11 +49,8 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportCli
         const el = document.createElement('div');
         const rotation = d.trueTrack ? d.trueTrack - 45 : 0;
         
-        // ==========================================
-        // NEW: THE MAGIC COLOR LOGIC
-        // If the delay board is open AND the plane is late, turn it blood red!
-        // ==========================================
-        const isDelayed = activeTool === 'delays' && d.delayed && d.delayed > 15;
+        // FIX: Changed from > 15 to > 0
+        const isDelayed = activeTool === 'delays' && d.delayed && d.delayed > 0;
         const planeColor = isDelayed ? '#ef4444' : '#ffcc00'; 
         
         el.innerHTML = `
@@ -68,7 +62,6 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportCli
         return el;
       }}
 
-      // LAYER 3: AIRPORTS
       labelsData={airports}
       labelLat={(d) => d.lat}
       labelLng={(d) => d.lng}
@@ -84,7 +77,6 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportCli
         </div>
       `}
 
-      // LAYER 4: GLOWING ROUTE ARCS
       arcsData={activeArc ? [activeArc] : []}
       arcStartLat={(d) => d.startLat}
       arcStartLng={(d) => d.startLng}

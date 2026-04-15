@@ -27,6 +27,9 @@ function App() {
   const [activeArc, setActiveArc] = useState(null); 
   const [activeAirline, setActiveAirline] = useState(null); 
   
+  // NEW: Store the user's physical location
+  const [userLocation, setUserLocation] = useState(null); 
+  
   const globeRef = useRef();
 
   useEffect(() => {
@@ -49,6 +52,7 @@ function App() {
     setAirports([]); 
     setActiveArc(null); 
     setActiveAirline(null); 
+    setUserLocation(null);
 
     const [flightData, airportData] = await Promise.all([
       fetchLiveFlights(country, state),
@@ -73,13 +77,50 @@ function App() {
     setSelectedAirportData(airport);
   };
 
-  const displayedFlights = activeAirline 
-    ? flights.filter(flight => {
+  // NEW: Get User Location from Browser
+  const handleDetectLocation = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        setUserLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
+        
+        // Spin the globe to zoom in on the user!
+        if (globeRef.current) {
+          globeRef.current.pointOfView({ lat: position.coords.latitude, lng: position.coords.longitude, altitude: 1.2 }, 2000);
+        }
+      }, () => {
+        alert("Please allow location access in your browser to use the Nearby Radar.");
+      });
+    } else {
+      alert("Geolocation is not supported by your browser.");
+    }
+  };
+
+  // NEW: The Haversine Formula (Calculates distance between two GPS points in Kilometers)
+  const getDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; 
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  // UPDATED: Filter flights based on Airline OR Nearby 200km radius
+  const displayedFlights = (() => {
+    if (activeTool === 'airline' && activeAirline) {
+      return flights.filter(flight => {
         if (flight.airline_iata === activeAirline) return true;
         if (flight.flight_iata && flight.flight_iata.startsWith(activeAirline)) return true;
         return false;
-      })
-    : flights;
+      });
+    }
+    if (activeTool === 'nearby' && userLocation) {
+      return flights.filter(f => getDistance(userLocation.lat, userLocation.lng, f.latitude, f.longitude) <= 200);
+    }
+    return flights;
+  })();
 
   return (
     <div style={{ width: '100vw', height: '100vh', backgroundColor: '#0b0f1a', overflow: 'hidden', position: 'relative' }}>
@@ -94,15 +135,19 @@ function App() {
 
       <LeftPanel 
         activeTool={activeTool} 
-        onClose={() => { setActiveTool('radar'); setActiveArc(null); }} 
+        onClose={() => { setActiveTool('radar'); setActiveArc(null); setUserLocation(null); }} 
         airports={airports}
         
-        // 1. NEW: Pass the massive flights array into the Left Panel so it can find the delays!
-        flights={flights} 
+        // Pass the already filtered flights down to the panel!
+        flights={displayedFlights} 
         
         onDrawArc={setActiveArc}
         activeAirline={activeAirline}
         onAirlineSelect={setActiveAirline}
+        
+        // NEW PROPS
+        userLocation={userLocation}
+        onDetectLocation={handleDetectLocation}
       />
 
       <div style={{ width: '100%', height: '100%' }}>
@@ -113,9 +158,10 @@ function App() {
           airports={airports} 
           onAirportClick={handleAirportClick} 
           activeArc={activeArc} 
-          
-          // 2. NEW: Pass the active tool state to the Globe so it knows when to turn planes red!
           activeTool={activeTool} 
+          
+          // NEW PROP
+          userLocation={userLocation} 
         />
       </div>
 
