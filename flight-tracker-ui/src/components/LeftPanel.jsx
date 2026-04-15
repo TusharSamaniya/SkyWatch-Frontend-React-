@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { fetchRoutes, fetchAirlines } from '../api/flightApi';
 
-const LeftPanel = ({ activeTool, onClose, airports, onDrawArc, onAirlineSelect, activeAirline }) => {
-  // 1. ALL HOOKS MUST GO AT THE VERY TOP
+// NEW: We added 'flights' to the props so the Left Panel can analyze the live radar data!
+const LeftPanel = ({ activeTool, onClose, airports, flights = [], onDrawArc, onAirlineSelect, activeAirline }) => {
   const [depIata, setDepIata] = useState('DEL');
   const [arrIata, setArrIata] = useState('BOM');
   const [routes, setRoutes] = useState([]);
@@ -12,7 +12,6 @@ const LeftPanel = ({ activeTool, onClose, airports, onDrawArc, onAirlineSelect, 
   
   const [isLoading, setIsLoading] = useState(false);
 
-  // Automatically fetch Airlines DB when the tool is opened (only once)
   useEffect(() => {
     if (activeTool === 'airline' && airlines.length === 0) {
       const getAirlines = async () => {
@@ -25,7 +24,6 @@ const LeftPanel = ({ activeTool, onClose, airports, onDrawArc, onAirlineSelect, 
     }
   }, [activeTool, airlines.length]);
 
-  // 2. NOW WE CAN SAFELY DO OUR EARLY RETURN
   if (!activeTool || activeTool === 'radar') return null;
 
   const toolTitles = {
@@ -57,10 +55,15 @@ const LeftPanel = ({ activeTool, onClose, airports, onDrawArc, onAirlineSelect, 
     }
   };
 
-  // Safe to filter now
   const filteredAirlines = (airlines || [])
     .filter(a => a.name.toLowerCase().includes(airlineSearch.toLowerCase()) || a.iata.toLowerCase().includes(airlineSearch.toLowerCase()))
     .slice(0, 50);
+
+  // NEW: Delay Board Logic! Filter flights delayed more than 15 mins, and sort them highest to lowest.
+  const delayedFlightsList = flights
+    .filter(f => f.delayed && f.delayed > 15)
+    .sort((a, b) => b.delayed - a.delayed)
+    .slice(0, 50); // Show top 50 worst delays
 
   return (
     <div style={{
@@ -124,38 +127,61 @@ const LeftPanel = ({ activeTool, onClose, airports, onDrawArc, onAirlineSelect, 
           <p style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '15px' }}>
             Isolate specific airlines to view their active global fleet.
           </p>
-          
           <input 
-            type="text" 
-            placeholder="Search Airline (e.g., IndiGo, Emirates)" 
-            value={airlineSearch}
-            onChange={(e) => setAirlineSearch(e.target.value)}
+            type="text" placeholder="Search Airline (e.g., IndiGo, Emirates)" 
+            value={airlineSearch} onChange={(e) => setAirlineSearch(e.target.value)}
             style={{ width: '100%', background: '#1f2937', border: '1px solid #374151', color: 'white', padding: '12px', borderRadius: '5px', marginBottom: '20px', boxSizing: 'border-box' }}
           />
-
           {isLoading ? (
             <div style={{ color: '#ffba00', textAlign: 'center', marginTop: '20px' }}>Downloading Global Fleet DB...</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <button 
-                onClick={() => onAirlineSelect(null)} 
-                style={{ background: activeAirline === null ? '#10b981' : '#1f2937', color: activeAirline === null ? 'black' : 'white', border: 'none', padding: '12px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', textAlign: 'left' }}
-              >
+              <button onClick={() => onAirlineSelect(null)} style={{ background: activeAirline === null ? '#10b981' : '#1f2937', color: activeAirline === null ? 'black' : 'white', border: 'none', padding: '12px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', textAlign: 'left' }}>
                 🌍 Show All Airlines
               </button>
-
               {filteredAirlines.map((airline, idx) => (
-                <button 
-                  key={idx}
-                  onClick={() => onAirlineSelect(airline.iata)}
-                  style={{ background: activeAirline === airline.iata ? '#ffba00' : '#111827', color: activeAirline === airline.iata ? 'black' : '#e5e7eb', border: '1px solid #374151', padding: '12px', borderRadius: '5px', cursor: 'pointer', textAlign: 'left', display: 'flex', justifyContent: 'space-between' }}
-                >
+                <button key={idx} onClick={() => onAirlineSelect(airline.iata)} style={{ background: activeAirline === airline.iata ? '#ffba00' : '#111827', color: activeAirline === airline.iata ? 'black' : '#e5e7eb', border: '1px solid #374151', padding: '12px', borderRadius: '5px', cursor: 'pointer', textAlign: 'left', display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontWeight: 'bold' }}>{airline.name}</span>
                   <span style={{ color: activeAirline === airline.iata ? 'black' : '#9ca3af', fontSize: '12px' }}>{airline.iata}</span>
                 </button>
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* ========================================= */}
+      {/* TOOL 3: LIVE DELAY BOARD */}
+      {/* ========================================= */}
+      {activeTool === 'delays' && (
+        <div style={{ marginTop: '20px' }}>
+          <p style={{ color: '#9ca3af', fontSize: '14px', marginBottom: '15px' }}>
+            Real-time tracker of the most delayed flights currently in the air.
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {delayedFlightsList.length === 0 ? (
+              <div style={{ color: '#10b981', textAlign: 'center', padding: '20px', background: '#1f2937', borderRadius: '8px' }}>
+                ✅ No significant delays detected in this region right now!
+              </div>
+            ) : (
+              delayedFlightsList.map((flight, idx) => (
+                <div key={idx} style={{ background: '#1f2937', padding: '15px', borderRadius: '8px', borderLeft: '4px solid #ef4444', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontWeight: 'bold', color: '#f87171', fontSize: '16px' }}>
+                      {flight.airline_iata || ''} {flight.flight_number || flight.callsign}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>
+                      {flight.dep_iata || '?'} ➔ {flight.arr_iata || '?'}
+                    </div>
+                  </div>
+                  <div style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', padding: '8px 12px', borderRadius: '5px', fontWeight: 'bold', fontSize: '14px' }}>
+                    +{flight.delayed} mins
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
 
