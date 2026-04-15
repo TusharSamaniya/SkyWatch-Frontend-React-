@@ -1,8 +1,8 @@
 import React, { useEffect, useState, forwardRef } from 'react';
 import Globe from 'react-globe.gl';
 
-// NEW: Added 'activeArc' to the props
-const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportClick, activeArc }, ref) => {
+// NEW: Added 'activeTool' to the props
+const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportClick, activeArc, activeTool }, ref) => {
   const [countries, setCountries] = useState({ features: [] });
 
   useEffect(() => {
@@ -38,7 +38,8 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportCli
         <div style="background: rgba(0,0,0,0.8); padding: 8px; border-radius: 5px; color: white; border: 1px solid #ffcc00;">
           <b>Flight: ${d.callsign || 'Unknown'}</b><br/>
           Altitude: ${d.altitude}m<br/>
-          Speed: ${d.velocity} km/h
+          Speed: ${d.velocity} km/h<br/>
+          ${d.delayed && d.delayed > 0 ? `<span style="color: #ef4444;">Delayed: +${d.delayed} mins</span>` : '<span style="color: #10b981;">On Time</span>'}
         </div>
       `}
 
@@ -50,8 +51,16 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportCli
       htmlElement={(d) => {
         const el = document.createElement('div');
         const rotation = d.trueTrack ? d.trueTrack - 45 : 0;
+        
+        // ==========================================
+        // NEW: THE MAGIC COLOR LOGIC
+        // If the delay board is open AND the plane is late, turn it blood red!
+        // ==========================================
+        const isDelayed = activeTool === 'delays' && d.delayed && d.delayed > 15;
+        const planeColor = isDelayed ? '#ef4444' : '#ffcc00'; 
+        
         el.innerHTML = `
-          <svg viewBox="0 0 24 24" width="20" height="20" style="fill: #ffcc00; transform: rotate(${rotation}deg); filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8));">
+          <svg viewBox="0 0 24 24" width="20" height="20" style="fill: ${planeColor}; transform: rotate(${rotation}deg); filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8)); transition: fill 0.3s ease;">
             <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
           </svg>
         `;
@@ -75,19 +84,17 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportCli
         </div>
       `}
 
-      // ==========================================
-      // LAYER 4: NEW - GLOWING ROUTE ARCS
-      // ==========================================
+      // LAYER 4: GLOWING ROUTE ARCS
       arcsData={activeArc ? [activeArc] : []}
       arcStartLat={(d) => d.startLat}
       arcStartLng={(d) => d.startLng}
       arcEndLat={(d) => d.endLat}
       arcEndLng={(d) => d.endLng}
-      arcColor={() => '#ef4444'} // Bright Red
-      arcDashLength={0.4} // Dotted line effect
+      arcColor={() => '#ef4444'} 
+      arcDashLength={0.4} 
       arcDashGap={0.2}
-      arcDashAnimateTime={1500} // Animated glowing speed
-      arcAltitudeAutoScale={0.3} // How high the curve arcs off the earth
+      arcDashAnimateTime={1500} 
+      arcAltitudeAutoScale={0.3} 
     />
   );
 });
