@@ -2,17 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { fetchRoutes, fetchAirlines } from '../api/flightApi';
 
 const LeftPanel = ({ activeTool, onClose, airports, onDrawArc, onAirlineSelect, activeAirline }) => {
-  // Route State
+  // 1. ALL HOOKS MUST GO AT THE VERY TOP
   const [depIata, setDepIata] = useState('DEL');
   const [arrIata, setArrIata] = useState('BOM');
   const [routes, setRoutes] = useState([]);
   
-  // Airline State
   const [airlines, setAirlines] = useState([]);
   const [airlineSearch, setAirlineSearch] = useState('');
   
   const [isLoading, setIsLoading] = useState(false);
 
+  // Automatically fetch Airlines DB when the tool is opened (only once)
+  useEffect(() => {
+    if (activeTool === 'airline' && airlines.length === 0) {
+      const getAirlines = async () => {
+        setIsLoading(true);
+        const data = await fetchAirlines();
+        setAirlines(data || []);
+        setIsLoading(false);
+      };
+      getAirlines();
+    }
+  }, [activeTool, airlines.length]);
+
+  // 2. NOW WE CAN SAFELY DO OUR EARLY RETURN
   if (!activeTool || activeTool === 'radar') return null;
 
   const toolTitles = {
@@ -22,24 +35,11 @@ const LeftPanel = ({ activeTool, onClose, airports, onDrawArc, onAirlineSelect, 
     nearby: '📍 Nearby Airspace Radar'
   };
 
-  // Automatically fetch Airlines DB when the tool is opened (only once)
-  useEffect(() => {
-    if (activeTool === 'airline' && airlines.length === 0) {
-      const getAirlines = async () => {
-        setIsLoading(true);
-        const data = await fetchAirlines();
-        setAirlines(data);
-        setIsLoading(false);
-      };
-      getAirlines();
-    }
-  }, [activeTool, airlines.length]);
-
   const handleRouteSearch = async () => {
     setIsLoading(true);
     setRoutes([]);
     const data = await fetchRoutes(depIata, arrIata);
-    setRoutes(data);
+    setRoutes(data || []);
     setIsLoading(false);
   };
 
@@ -57,8 +57,8 @@ const LeftPanel = ({ activeTool, onClose, airports, onDrawArc, onAirlineSelect, 
     }
   };
 
-  // Filter airlines based on user search (limit to 50 so it doesn't lag the browser)
-  const filteredAirlines = airlines
+  // Safe to filter now
+  const filteredAirlines = (airlines || [])
     .filter(a => a.name.toLowerCase().includes(airlineSearch.toLowerCase()) || a.iata.toLowerCase().includes(airlineSearch.toLowerCase()))
     .slice(0, 50);
 
@@ -137,7 +137,6 @@ const LeftPanel = ({ activeTool, onClose, airports, onDrawArc, onAirlineSelect, 
             <div style={{ color: '#ffba00', textAlign: 'center', marginTop: '20px' }}>Downloading Global Fleet DB...</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {/* Button to clear the filter and show all planes */}
               <button 
                 onClick={() => onAirlineSelect(null)} 
                 style={{ background: activeAirline === null ? '#10b981' : '#1f2937', color: activeAirline === null ? 'black' : 'white', border: 'none', padding: '12px', borderRadius: '5px', cursor: 'pointer', fontWeight: 'bold', textAlign: 'left' }}

@@ -75,9 +75,17 @@ function App() {
     setSelectedAirportData(airport);
   };
 
-  // NEW: Intercept the flights array! If an airline is selected, filter the array down to ONLY that airline.
+  // NEW: Bulletproof filter that checks multiple AirLabs data fields!
   const displayedFlights = activeAirline 
-    ? flights.filter(flight => flight.airline_iata === activeAirline) 
+    ? flights.filter(flight => {
+        // 1. Check if AirLabs provided the exact airline code (e.g., "6E")
+        if (flight.airline_iata === activeAirline) return true;
+        
+        // 2. Check if the airline code is hidden inside the flight number (e.g., "6E2157" starts with "6E")
+        if (flight.flight_iata && flight.flight_iata.startsWith(activeAirline)) return true;
+        
+        return false;
+      })
     : flights;
 
   return (
