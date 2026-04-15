@@ -136,3 +136,19 @@ export const fetchAirportSchedule = async (iata) => {
         return { arrivals: [], departures: [] };
     }
 };
+
+// NEW: Fetch Route Intelligence Data
+export const fetchRoutes = async (dep, arr) => {
+    try {
+        console.log(`Asking Spring Boot for routes: ${dep} -> ${arr}`);
+        const response = await fetch(`http://localhost:8080/api/flights/routes?dep=${dep}&arr=${arr}`);
+        
+        if (!response.ok) throw new Error("Failed to fetch routes");
+        
+        const data = await response.json();
+        return data.response || []; // AirLabs wraps the array inside 'response'
+    } catch (error) {
+        console.error("Error fetching routes:", error);
+        return [];
+    }
+};
