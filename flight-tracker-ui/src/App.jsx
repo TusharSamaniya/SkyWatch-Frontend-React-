@@ -25,8 +25,6 @@ function App() {
   
   const [activeTool, setActiveTool] = useState('radar'); 
   const [activeArc, setActiveArc] = useState(null); 
-  
-  // NEW: State to track which airline we are isolating
   const [activeAirline, setActiveAirline] = useState(null); 
   
   const globeRef = useRef();
@@ -50,7 +48,7 @@ function App() {
     setFlights([]); 
     setAirports([]); 
     setActiveArc(null); 
-    setActiveAirline(null); // Clear the airline filter when region changes
+    setActiveAirline(null); 
 
     const [flightData, airportData] = await Promise.all([
       fetchLiveFlights(country, state),
@@ -75,15 +73,10 @@ function App() {
     setSelectedAirportData(airport);
   };
 
-  // NEW: Bulletproof filter that checks multiple AirLabs data fields!
   const displayedFlights = activeAirline 
     ? flights.filter(flight => {
-        // 1. Check if AirLabs provided the exact airline code (e.g., "6E")
         if (flight.airline_iata === activeAirline) return true;
-        
-        // 2. Check if the airline code is hidden inside the flight number (e.g., "6E2157" starts with "6E")
         if (flight.flight_iata && flight.flight_iata.startsWith(activeAirline)) return true;
-        
         return false;
       })
     : flights;
@@ -103,9 +96,11 @@ function App() {
         activeTool={activeTool} 
         onClose={() => { setActiveTool('radar'); setActiveArc(null); }} 
         airports={airports}
-        onDrawArc={setActiveArc}
         
-        // NEW PROPS PASSED TO LEFT PANEL
+        // 1. NEW: Pass the massive flights array into the Left Panel so it can find the delays!
+        flights={flights} 
+        
+        onDrawArc={setActiveArc}
         activeAirline={activeAirline}
         onAirlineSelect={setActiveAirline}
       />
@@ -113,14 +108,14 @@ function App() {
       <div style={{ width: '100%', height: '100%' }}>
         <GlobeWidget 
           ref={globeRef} 
-          
-          // WE PASS THE FILTERED FLIGHTS INSTEAD OF ALL FLIGHTS
           flights={displayedFlights} 
-          
           onFlightClick={handleFlightClick} 
           airports={airports} 
           onAirportClick={handleAirportClick} 
           activeArc={activeArc} 
+          
+          // 2. NEW: Pass the active tool state to the Globe so it knows when to turn planes red!
+          activeTool={activeTool} 
         />
       </div>
 
