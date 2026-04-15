@@ -1,8 +1,8 @@
 import React, { useEffect, useState, forwardRef } from 'react';
 import Globe from 'react-globe.gl';
 
-// NEW: Added 'airports' and 'onAirportClick' to the props
-const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportClick }, ref) => {
+// NEW: Added 'activeArc' to the props
+const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportClick, activeArc }, ref) => {
   const [countries, setCountries] = useState({ features: [] });
 
   useEffect(() => {
@@ -10,7 +10,6 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportCli
       .then(res => res.json())
       .then(setCountries);
 
-    // Initial spin when the app first loads
     if (ref && ref.current) {
       ref.current.pointOfView({ lat: 28.6, lng: 77.2, altitude: 0.8 }, 4000);
     }
@@ -27,9 +26,7 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportCli
       polygonSideColor={() => 'rgba(0,0,0,0)'}
       polygonStrokeColor={() => '#ffffff'}
 
-      // ==========================================
-      // LAYER 1: INVISIBLE HIT-BOXES (For Flights)
-      // ==========================================
+      // LAYER 1: FLIGHT HITBOXES
       pointsData={flights}
       pointLat={(d) => d.latitude}
       pointLng={(d) => d.longitude}
@@ -45,9 +42,7 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportCli
         </div>
       `}
 
-      // ==========================================
-      // LAYER 2: THE AIRPLANE ICONS (Visuals Only)
-      // ==========================================
+      // LAYER 2: AIRPLANE ICONS
       htmlElementsData={flights}
       htmlLat={(d) => d.latitude}
       htmlLng={(d) => d.longitude}
@@ -64,33 +59,35 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportCli
         return el;
       }}
 
-      // ==========================================
-      // LAYER 3: NEW AIRPORT LAYER (Green Dots + IATA Text)
-      // ==========================================
-      // ==========================================
-      // LAYER 3: NEW AIRPORT LAYER (Green Dots Only)
-      // ==========================================
+      // LAYER 3: AIRPORTS
       labelsData={airports}
       labelLat={(d) => d.lat}
       labelLng={(d) => d.lng}
-      
-      // FIX 1: Remove the static text to clean up the map!
       labelText={() => ''} 
-      
-      // FIX 2: Make the dots much smaller (was 0.3, now 0.15)
       labelDotRadius={0.15} 
-      
       labelColor={() => '#10b981'}
       labelAltitude={0.015}
       onLabelClick={(airport) => onAirportClick(airport)} 
-      
-      // The hover tooltip will still work perfectly so you know what you are clicking!
       labelLabel={(d) => `
         <div style="background: rgba(0,0,0,0.8); padding: 8px; border-radius: 5px; color: white; border: 1px solid #10b981;">
           <b>${d.iata} - ${d.name}</b><br/>
           Click to view live timetable
         </div>
       `}
+
+      // ==========================================
+      // LAYER 4: NEW - GLOWING ROUTE ARCS
+      // ==========================================
+      arcsData={activeArc ? [activeArc] : []}
+      arcStartLat={(d) => d.startLat}
+      arcStartLng={(d) => d.startLng}
+      arcEndLat={(d) => d.endLat}
+      arcEndLng={(d) => d.endLng}
+      arcColor={() => '#ef4444'} // Bright Red
+      arcDashLength={0.4} // Dotted line effect
+      arcDashGap={0.2}
+      arcDashAnimateTime={1500} // Animated glowing speed
+      arcAltitudeAutoScale={0.3} // How high the curve arcs off the earth
     />
   );
 });
