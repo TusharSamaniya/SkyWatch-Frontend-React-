@@ -92,10 +92,24 @@ export const fetchFlightStory = async (callsign, dep, arr, aircraft, alt) => {
 };
 
 // NEW: Fetch all airports for the map
-export const fetchAirports = async (country = 'IN') => {
+// NEW: Fetch all airports for the map (WITH TRANSLATOR)
+export const fetchAirports = async (countryName = 'India') => {
     try {
-        console.log(`Asking Spring Boot for airports in: ${country}`);
-        const response = await fetch(`http://localhost:8080/api/flights/airports?country=${country}`);
+        // Map the dropdown name to the 2-letter code AirLabs requires
+        const countryCodes = {
+            'India': 'IN',
+            'USA': 'US',
+            'UK': 'GB',
+            'Australia': 'AU',
+            'Canada': 'CA',
+            'Japan': 'JP'
+        };
+
+        // Convert the name, default to 'IN' if something goes wrong
+        const countryCode = countryCodes[countryName] || 'IN'; 
+
+        console.log(`Asking Spring Boot for airports in: ${countryName} (Code: ${countryCode})`);
+        const response = await fetch(`http://localhost:8080/api/flights/airports?country=${countryCode}`);
         
         if (!response.ok) throw new Error("Failed to fetch airports");
         

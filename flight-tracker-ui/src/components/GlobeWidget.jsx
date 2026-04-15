@@ -67,15 +67,24 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportCli
       // ==========================================
       // LAYER 3: NEW AIRPORT LAYER (Green Dots + IATA Text)
       // ==========================================
+      // ==========================================
+      // LAYER 3: NEW AIRPORT LAYER (Green Dots Only)
+      // ==========================================
       labelsData={airports}
       labelLat={(d) => d.lat}
       labelLng={(d) => d.lng}
-      labelText={(d) => d.iata} // Shows the airport code (e.g., DEL, BOM)
-      labelSize={0.6} // Size of the text
-      labelDotRadius={0.3} // Size of the green dot
-      labelColor={() => '#10b981'} // Bright Emerald Green
-      labelAltitude={0.015} // Sits slightly above the map
-      onLabelClick={(airport) => onAirportClick(airport)} // Triggers the panel!
+      
+      // FIX 1: Remove the static text to clean up the map!
+      labelText={() => ''} 
+      
+      // FIX 2: Make the dots much smaller (was 0.3, now 0.15)
+      labelDotRadius={0.15} 
+      
+      labelColor={() => '#10b981'}
+      labelAltitude={0.015}
+      onLabelClick={(airport) => onAirportClick(airport)} 
+      
+      // The hover tooltip will still work perfectly so you know what you are clicking!
       labelLabel={(d) => `
         <div style="background: rgba(0,0,0,0.8); padding: 8px; border-radius: 5px; color: white; border: 1px solid #10b981;">
           <b>${d.iata} - ${d.name}</b><br/>
