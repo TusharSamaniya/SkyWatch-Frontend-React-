@@ -152,3 +152,19 @@ export const fetchRoutes = async (dep, arr) => {
         return [];
     }
 };
+
+// NEW: Fetch Airline Fleet Data
+export const fetchAirlines = async () => {
+    try {
+        console.log(`Asking Spring Boot for the global Airlines DB`);
+        const response = await fetch(`http://localhost:8080/api/flights/airlines`);
+        
+        if (!response.ok) throw new Error("Failed to fetch airlines");
+        
+        const data = await response.json();
+        return data; 
+    } catch (error) {
+        console.error("Error fetching airlines:", error);
+        return [];
+    }
+};
