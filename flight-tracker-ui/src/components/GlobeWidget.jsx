@@ -1,7 +1,8 @@
 import React, { useEffect, useState, forwardRef } from 'react';
 import Globe from 'react-globe.gl';
 
-const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportClick, activeArc, activeTool }, ref) => {
+// Added userLocation
+const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportClick, activeArc, activeTool, userLocation }, ref) => {
   const [countries, setCountries] = useState({ features: [] });
 
   useEffect(() => {
@@ -49,7 +50,6 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportCli
         const el = document.createElement('div');
         const rotation = d.trueTrack ? d.trueTrack - 45 : 0;
         
-        // FIX: Changed from > 15 to > 0
         const isDelayed = activeTool === 'delays' && d.delayed && d.delayed > 0;
         const planeColor = isDelayed ? '#ef4444' : '#ffcc00'; 
         
@@ -87,6 +87,17 @@ const GlobeWidget = forwardRef(({ flights, onFlightClick, airports, onAirportCli
       arcDashGap={0.2}
       arcDashAnimateTime={1500} 
       arcAltitudeAutoScale={0.3} 
+
+      // ==========================================
+      // LAYER 5: NEW - NEARBY RADAR RINGS
+      // ==========================================
+      ringsData={userLocation && activeTool === 'nearby' ? [userLocation] : []}
+      ringLat={(d) => d.lat}
+      ringLng={(d) => d.lng}
+      ringColor={() => '#3b82f6'} // Blue radar pulse
+      ringMaxRadius={1.8} // Roughly equates to a 200km radius on the globe
+      ringPropagationSpeed={2}
+      ringRepeatPeriod={1000}
     />
   );
 });
