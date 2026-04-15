@@ -24,7 +24,10 @@ function App() {
   const [selectedAirportData, setSelectedAirportData] = useState(null); 
   
   const [activeTool, setActiveTool] = useState('radar'); 
-  const [activeArc, setActiveArc] = useState(null); // NEW: State to hold the glowing line!
+  const [activeArc, setActiveArc] = useState(null); 
+  
+  // NEW: State to track which airline we are isolating
+  const [activeAirline, setActiveAirline] = useState(null); 
   
   const globeRef = useRef();
 
@@ -46,7 +49,8 @@ function App() {
     }
     setFlights([]); 
     setAirports([]); 
-    setActiveArc(null); // Clear the arc when we move regions
+    setActiveArc(null); 
+    setActiveAirline(null); // Clear the airline filter when region changes
 
     const [flightData, airportData] = await Promise.all([
       fetchLiveFlights(country, state),
@@ -71,6 +75,11 @@ function App() {
     setSelectedAirportData(airport);
   };
 
+  // NEW: Intercept the flights array! If an airline is selected, filter the array down to ONLY that airline.
+  const displayedFlights = activeAirline 
+    ? flights.filter(flight => flight.airline_iata === activeAirline) 
+    : flights;
+
   return (
     <div style={{ width: '100vw', height: '100vh', backgroundColor: '#0b0f1a', overflow: 'hidden', position: 'relative' }}>
       
@@ -82,22 +91,28 @@ function App() {
       <Navbar activeTool={activeTool} onToolSelect={setActiveTool} />
       <RegionSelector onShowFlights={handleRegionSubmit} />
 
-      {/* NEW PROPS PASSED TO LEFT PANEL */}
       <LeftPanel 
         activeTool={activeTool} 
         onClose={() => { setActiveTool('radar'); setActiveArc(null); }} 
         airports={airports}
         onDrawArc={setActiveArc}
+        
+        // NEW PROPS PASSED TO LEFT PANEL
+        activeAirline={activeAirline}
+        onAirlineSelect={setActiveAirline}
       />
 
       <div style={{ width: '100%', height: '100%' }}>
         <GlobeWidget 
           ref={globeRef} 
-          flights={flights} 
+          
+          // WE PASS THE FILTERED FLIGHTS INSTEAD OF ALL FLIGHTS
+          flights={displayedFlights} 
+          
           onFlightClick={handleFlightClick} 
           airports={airports} 
           onAirportClick={handleAirportClick} 
-          activeArc={activeArc} // NEW PROP PASSED TO GLOBE
+          activeArc={activeArc} 
         />
       </div>
 
