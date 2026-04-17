@@ -9,7 +9,7 @@
 //   } catch (error) {
 //     console.error("Error fetching live flights:", error);
 //     return null;
-//   }
+//   }   https://skywatch-backend-springboot-1.onrender.com
 // };
 
 // // NEW: Fetches the combined Radar, Schedule, and Photo details for a specific clicked plane
@@ -38,7 +38,7 @@
 // 1. Fetch live flights (Pointed to LOCALHOST)
 export const fetchLiveFlights = async (country = 'India', state = '') => {
   try {
-    const response = await fetch(`http://localhost:8080/api/flights/live?country=${country}&state=${state}`);
+    const response = await fetch(`https://skywatch-backend-springboot-1.onrender.com/api/flights/live?country=${country}&state=${state}`);
     const data = await response.json();
     return data;
   } catch (error) {
@@ -52,7 +52,7 @@ export const fetchFlightRoute = async (callsign) => {
     try {
         console.log(`Asking local Spring Boot for deep-dive details for: ${callsign}`);
         
-        const response = await fetch(`http://localhost:8080/api/flights/${callsign}`);
+        const response = await fetch(`https://skywatch-backend-springboot-1.onrender.com/api/flights/${callsign}`);
         
         if (!response.ok) {
             throw new Error("Network response was not ok");
@@ -75,7 +75,7 @@ export const fetchFlightStory = async (callsign, dep, arr, aircraft, alt) => {
         console.log(`Asking Spring Boot to generate AI story for: ${callsign}`);
         
         // Ensure this points to your local Spring Boot server!
-        const url = `http://localhost:8080/api/flights/${callsign}/story?dep=${dep}&arr=${arr}&aircraft=${aircraft}&alt=${alt}`;
+        const url = `https://skywatch-backend-springboot-1.onrender.com/api/flights/${callsign}/story?dep=${dep}&arr=${arr}&aircraft=${aircraft}&alt=${alt}`;
         const response = await fetch(url);
         
         if (!response.ok) {
@@ -109,7 +109,7 @@ export const fetchAirports = async (countryName = 'India') => {
         const countryCode = countryCodes[countryName] || 'IN'; 
 
         console.log(`Asking Spring Boot for airports in: ${countryName} (Code: ${countryCode})`);
-        const response = await fetch(`http://localhost:8080/api/flights/airports?country=${countryCode}`);
+        const response = await fetch(`https://skywatch-backend-springboot-1.onrender.com/api/flights/airports?country=${countryCode}`);
         
         if (!response.ok) throw new Error("Failed to fetch airports");
         
@@ -125,7 +125,7 @@ export const fetchAirports = async (countryName = 'India') => {
 export const fetchAirportSchedule = async (iata) => {
     try {
         console.log(`Asking Spring Boot for live schedule at: ${iata}`);
-        const response = await fetch(`http://localhost:8080/api/flights/airports/${iata}/schedules`);
+        const response = await fetch(`https://skywatch-backend-springboot-1.onrender.com/api/flights/airports/${iata}/schedules`);
         
         if (!response.ok) throw new Error("Failed to fetch airport schedule");
         
@@ -141,7 +141,7 @@ export const fetchAirportSchedule = async (iata) => {
 export const fetchRoutes = async (dep, arr) => {
     try {
         console.log(`Asking Spring Boot for routes: ${dep} -> ${arr}`);
-        const response = await fetch(`http://localhost:8080/api/flights/routes?dep=${dep}&arr=${arr}`);
+        const response = await fetch(`https://skywatch-backend-springboot-1.onrender.com/api/flights/routes?dep=${dep}&arr=${arr}`);
         
         if (!response.ok) throw new Error("Failed to fetch routes");
         
@@ -157,7 +157,7 @@ export const fetchRoutes = async (dep, arr) => {
 export const fetchAirlines = async () => {
     try {
         console.log(`Asking Spring Boot for the global Airlines DB`);
-        const response = await fetch(`http://localhost:8080/api/flights/airlines`);
+        const response = await fetch(`https://skywatch-backend-springboot-1.onrender.com/api/flights/airlines`);
         
         if (!response.ok) throw new Error("Failed to fetch airlines");
         
